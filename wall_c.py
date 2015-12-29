@@ -11,7 +11,7 @@ class BackgroundChanger(Gtk.Window):
         box = Gtk.Box(spacing=6)
         self.add(box)
 
-        button1 = Gtk.Button("Set Background Image")
+        button1 = Gtk.Button("Wall-C")
         button1.connect("clicked", self.on_file_clicked)
         box.add(button1)
 
