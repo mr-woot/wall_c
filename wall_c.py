@@ -1,50 +1,51 @@
-import os
-import subprocess
-from gi.repository import Gtk
+from gi.repository import Gtk, Gio
 
+class BackgroundChanger(Gtk.Window):
 
-class MainWindow(Gtk.Window):
+    SCHEMA = 'org.gnome.desktop.background'
+    KEY = 'picture-uri'
 
     def __init__(self):
-        Gtk.Window.__init__(self, title="WALL_C")
+        Gtk.Window.__init__(self, title="Background Changer")
 
-        # set fixed width, resizable=false, and centers window
-        self.set_border_width(100)
-        self.set_position(Gtk.WindowPosition.CENTER)
-        self.set_resizable(False)
+        box = Gtk.Box(spacing=6)
+        self.add(box)
 
-        # initialize vertical box
-        layout = Gtk.Box(spacing=70)
-        self.add(layout)
-
-        #change bg
-        button = Gtk.Button("Wall_C")
-        button.connect("clicked", self.on_file_clicked)
-        layout.add(button)
-
+        button1 = Gtk.Button("Set Background Image")
+        button1.connect("clicked", self.on_file_clicked)
+        box.add(button1)
 
     def on_file_clicked(self, widget):
+        gsettings = Gio.Settings.new(self.SCHEMA)
 
-        dialog = Gtk.FileChooserDialog("Select image file", None, Gtk.FileChooserAction.OPEN,
-                                       ("Open", Gtk.ResponseType.OK,
-                                        "Cancel", Gtk.ResponseType.CANCEL))
+        dialog = Gtk.FileChooserDialog("Please choose a file", self,
+            Gtk.FileChooserAction.OPEN,
+            (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+             Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
+
+        self.add_filters(dialog)
 
         response = dialog.run()
-
         if response == Gtk.ResponseType.OK:
-            print("File Selected" + dialog.get_filename())
-            #dir_name = dialog.get_current_folder_uri
-            FILE_NAME = dialog.get_filename()
-            PARAMS = "gsettings set org.gnome.desktop.background picture-uri file://" + FILE_NAME
-            subprocess.call(PARAMS,shell=True)
-            #print(dir_name)
+            background = dialog.get_filename()
+            gsettings.set_string(self.KEY, "file://" + background)
         elif response == Gtk.ResponseType.CANCEL:
-            print("Oops..! Canceled")
+            pass
 
         dialog.destroy()
 
+    def add_filters(self, dialog):
+        filter_image = Gtk.FileFilter()
+        filter_image.set_name("Image files")
+        filter_image.add_mime_type("image/*")
+        dialog.add_filter(filter_image)
 
-window = MainWindow()
-window.connect("delete-event", Gtk.main_quit)
-window.show_all()
+        filter_any = Gtk.FileFilter()
+        filter_any.set_name("Any files")
+        filter_any.add_pattern("*")
+        dialog.add_filter(filter_any)
+
+win = BackgroundChanger()
+win.connect("delete-event", Gtk.main_quit)
+win.show_all()
 Gtk.main()
